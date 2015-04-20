@@ -2,12 +2,14 @@
 
 import scraperwiki
 import urllib2
+import urllib
+import urlparse
 from datetime import datetime
 from bs4 import BeautifulSoup
 
 # Set up variables
-entity_id = "E5043_KUTCRBO_gov"
-url = "http://data.kingston.gov.uk/Kingston_Open_Data/"
+entity_id = "E0421_BCC_gov"
+url = "http://www.buckscc.gov.uk/bcc/finance/payments.page"
 
 # Set up functions
 def convert_mth_strings ( mth_string ):
@@ -23,18 +25,22 @@ html = urllib2.urlopen(url)
 soup = BeautifulSoup(html)
 
 # find all entries with the required class
-links = soup.findAll('a', href=True)
+block = soup.find('div',{'class':'related-media'})
+links = block.findAll('a', href=True)
 
 for link in links:
-	url = link['href']
-	if 'https://drive.google.com/file/d/' in url:
+	url = 'http://www.buckscc.gov.uk' + link['href']
+	parsed_link = urlparse.urlsplit(url.encode('utf8'))
+	parsed_link = parsed_link._replace(path=urllib.quote(parsed_link.path))
+	encoded_link = parsed_link.geturl()
+	if '.csv' in encoded_link:
 		title = link.contents[0]
 		# create the right strings for the new filename
-		csvYr = title.split(' ')[-1]
-		csvMth = title.split(' ')[-2][:3]
+		csvYr = title.split(' ')[1]
+		csvMth = title.split(' ')[0][:3]
 		csvMth = csvMth.upper()
 		csvMth = convert_mth_strings(csvMth);
 		filename = entity_id + "_" + csvYr + "_" + csvMth + ".csv"
 		todays_date = str(datetime.now())
-		scraperwiki.sqlite.save(unique_keys=['l'], data={"l": url, "f": filename, "d": todays_date })
+		scraperwiki.sqlite.save(unique_keys=['l'], data={"l": encoded_link, "f": filename, "d": todays_date })
 		print filename
