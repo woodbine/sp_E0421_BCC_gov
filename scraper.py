@@ -85,6 +85,7 @@ def convert_mth_strings ( mth_string ):
 
 entity_id = "E0421_BCC_gov"
 url = "http://www.buckscc.gov.uk/bcc/finance/payments.page"
+archive_url = 'https://data.gov.uk/dataset/payments-to-suppliers-over-500-from-buckinghamshire-county-council-2012-2013'
 errors = 0
 data = []
 
@@ -97,6 +98,7 @@ soup = BeautifulSoup(html, 'lxml')
 #### SCRAPE DATA
 import urlparse
 import urllib
+from datetime import datetime
 
 block = soup.find('div',{'class':'related-media'})
 links = block.findAll('a', href=True)
@@ -111,6 +113,23 @@ for link in links:
         csvMth = title.split(' ')[0][:3]
         csvMth = convert_mth_strings(csvMth.upper())
         data.append([csvYr, csvMth, encoded_link])
+archive_html = urllib2.urlopen(archive_url)
+archive_soup = BeautifulSoup(archive_html, 'lxml')
+rows = archive_soup.find_all('div', 'dataset-resource')
+for row in rows:
+    title = row.find('div', 'inner2').text.strip().split(' ')
+    year = title[-1]
+    month = title[-2]
+    doc_date = year+' '+month
+    if '20' in doc_date:
+        csv_date = datetime.strptime(doc_date, "%Y %B")
+        march_date = datetime.strptime('2014 March', "%Y %B")
+        if csv_date < march_date:
+            csvYr = year
+            csvMth = month[:3]
+            url = 'https://data.gov.uk'+row.find('a', 'js-tooltip')['href']
+            csvMth = convert_mth_strings(csvMth.upper())
+            data.append([csvYr, csvMth, url])
 
 #### STORE DATA 1.0
 
@@ -133,3 +152,4 @@ if errors > 0:
 
 
 #### EOF
+
