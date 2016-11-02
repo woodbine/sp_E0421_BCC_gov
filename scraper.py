@@ -9,7 +9,10 @@ import urllib2
 from datetime import datetime
 from bs4 import BeautifulSoup
 
-#### FUNCTIONS 1.0
+
+#### FUNCTIONS 1.2
+import requests    #import requests library to validate url
+
 
 def validateFilename(filename):
     filenameregex = '^[a-zA-Z0-9]+_[a-zA-Z0-9]+_[a-zA-Z0-9]+_[0-9][0-9][0-9][0-9]_[0-9QY][0-9]$'
@@ -37,19 +40,19 @@ def validateFilename(filename):
 
 def validateURL(url):
     try:
-        r = urllib2.urlopen(url)
+
+        r = requests.get(url)
         count = 1
-        while r.getcode() == 500 and count < 4:
+        while r.status_code == 500 and count < 4:
             print ("Attempt {0} - Status code: {1}. Retrying.".format(count, r.status_code))
             count += 1
-            r = urllib2.urlopen(url)
+            r = requests.get(url)
         sourceFilename = r.headers.get('Content-Disposition')
-
         if sourceFilename:
             ext = os.path.splitext(sourceFilename)[1].replace('"', '').replace(';', '').replace(' ', '')
         else:
             ext = os.path.splitext(url)[1]
-        validURL = r.getcode() == 200
+        validURL = r.status_code == 200
         validFiletype = ext.lower() in ['.csv', '.xls', '.xlsx', '.pdf']
         return validURL, validFiletype
     except:
@@ -117,7 +120,8 @@ archive_html = urllib2.urlopen(archive_url)
 archive_soup = BeautifulSoup(archive_html, 'lxml')
 rows = archive_soup.find_all('div', 'dataset-resource')
 for row in rows:
-    title = row.find('div', 'inner2').text.strip().split(' ')
+    title = row.find('span', 'inner-cell').text.strip().split(' ')
+    # title = row.find('div', 'inner2').text.strip().split(' ')
     year = title[-1]
     month = title[-2]
     doc_date = year+' '+month
@@ -127,7 +131,7 @@ for row in rows:
         if csv_date < march_date:
             csvYr = year
             csvMth = month[:3]
-            url = 'https://data.gov.uk'+row.find('a', 'js-tooltip')['href']
+            url = row.find('a', 'js-tooltip')['href']
             csvMth = convert_mth_strings(csvMth.upper())
             data.append([csvYr, csvMth, url])
 
@@ -152,4 +156,3 @@ if errors > 0:
 
 
 #### EOF
-
