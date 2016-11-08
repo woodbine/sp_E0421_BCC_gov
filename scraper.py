@@ -132,8 +132,11 @@ for row in rows:
             csvYr = year
             csvMth = month[:3]
             url = row.find('a', 'js-tooltip')['href']
+            parsed_link = urlparse.urlsplit(url.encode('utf8'))
+            parsed_link = parsed_link._replace(path=urllib.quote(parsed_link.path))
+            encoded_link = parsed_link.geturl()
             csvMth = convert_mth_strings(csvMth.upper())
-            data.append([csvYr, csvMth, url])
+            data.append([csvYr, csvMth, encoded_link])
 
 #### STORE DATA 1.0
 
