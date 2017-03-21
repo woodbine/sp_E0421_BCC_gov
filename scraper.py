@@ -87,7 +87,7 @@ def convert_mth_strings ( mth_string ):
 #### VARIABLES 1.0
 
 entity_id = "E0421_BCC_gov"
-url = "http://www.buckscc.gov.uk/bcc/finance/payments.page"
+url = "http://www.buckscc.gov.uk/services/council-and-democracy/open-data/spending-over-500/"
 archive_url = 'https://data.gov.uk/dataset/payments-to-suppliers-over-500-from-buckinghamshire-county-council-2012-2013'
 errors = 0
 data = []
