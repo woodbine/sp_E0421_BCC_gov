@@ -99,44 +99,16 @@ soup = BeautifulSoup(html, 'lxml')
 
 
 #### SCRAPE DATA
-import urlparse
-import urllib
-from datetime import datetime
 
-block = soup.find('div',{'class':'related-media'})
+block = soup.find('div',{'class':'pcg-rte-wrapper js-rte-content'})
 links = block.findAll('a', href=True)
 for link in links:
     url = 'http://www.buckscc.gov.uk' + link['href']
-    parsed_link = urlparse.urlsplit(url.encode('utf8'))
-    parsed_link = parsed_link._replace(path=urllib.quote(parsed_link.path))
-    encoded_link = parsed_link.geturl()
-    if '.csv' in encoded_link:
-        title = link.contents[0]
-        csvYr = title.split(' ')[1]
-        csvMth = title.split(' ')[0][:3]
-        csvMth = convert_mth_strings(csvMth.upper())
-        data.append([csvYr, csvMth, encoded_link])
-archive_html = urllib2.urlopen(archive_url)
-archive_soup = BeautifulSoup(archive_html, 'lxml')
-rows = archive_soup.find_all('div', 'dataset-resource')
-for row in rows:
-    title = row.find('span', 'inner-cell').text.strip().split(' ')
-    # title = row.find('div', 'inner2').text.strip().split(' ')
-    year = title[-1]
-    month = title[-2]
-    doc_date = year+' '+month
-    if '20' in doc_date:
-        csv_date = datetime.strptime(doc_date, "%Y %B")
-        march_date = datetime.strptime('2014 March', "%Y %B")
-        if csv_date < march_date:
-            csvYr = year
-            csvMth = month[:3]
-            url = row.find('a', 'js-tooltip')['href']
-            parsed_link = urlparse.urlsplit(url.encode('utf8'))
-            parsed_link = parsed_link._replace(path=urllib.quote(parsed_link.path))
-            encoded_link = parsed_link.geturl()
-            csvMth = convert_mth_strings(csvMth.upper())
-            data.append([csvYr, csvMth, encoded_link])
+    link_text = link.text.strip()
+    csvYr = link_text.split()[1]
+    csvMth = link_text[:3]
+    csvMth = convert_mth_strings(csvMth.upper())
+    data.append([csvYr, csvMth, url])
 
 #### STORE DATA 1.0
 
